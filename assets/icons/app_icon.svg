@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<title>Texcel — table editor</title>
+<desc>A white GitHub-style table card on a blue rounded square: gray header band, zebra rows, and a coral selected cell with a text caret and fill handle.</desc>
+<defs>
+<path id="tp" d="M924,512 L924,650 L923,694 L921,726 L918,752 L915,774 L911,793 L906,809 L901,824 L895,838 L888,850 L880,861 L871,871 L861,880 L850,888 L838,895 L824,901 L809,906 L793,911 L774,915 L752,918 L726,921 L694,923 L650,924 L512,924 L374,924 L330,923 L298,921 L272,918 L250,915 L231,911 L215,906 L200,901 L186,895 L174,888 L163,880 L153,871 L144,861 L136,850 L129,838 L123,824 L118,809 L113,793 L109,774 L106,752 L103,726 L101,694 L100,650 L100,512 L100,374 L101,330 L103,298 L106,272 L109,250 L113,231 L118,215 L123,200 L129,186 L136,174 L144,163 L153,153 L163,144 L174,136 L186,129 L200,123 L215,118 L231,113 L250,109 L272,106 L298,103 L330,101 L374,100 L512,100 L650,100 L694,101 L726,103 L752,106 L774,109 L793,113 L809,118 L824,123 L838,129 L850,136 L861,144 L871,153 L880,163 L888,174 L895,186 L901,200 L906,215 L911,231 L915,250 L918,272 L921,298 L923,330 L924,374 Z"/>
+<clipPath id="tc"><use href="#tp"/></clipPath>
+<filter id="tk" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0B1440" flood-opacity="0.30"/></filter>
+<linearGradient id="tbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F8BFF"/><stop offset="1" stop-color="#0757C2"/></linearGradient>
+<linearGradient id="thl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.2"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>
+<!-- The rounded body spans 48..976; the converter adds the macOS margin. -->
+<g transform="translate(512 512) scale(1.12621) translate(-512 -512)">
+<use href="#tp" fill="url(#tbg)"/>
+<g clip-path="url(#tc)">
+<use href="#tp" fill="url(#thl)"/>
+<g filter="url(#tk)"><rect x="222" y="236" width="580" height="552" rx="56" fill="#FFFFFF"/></g>
+<clipPath id="tcc"><rect x="222" y="236" width="580" height="552" rx="56"/></clipPath>
+<g clip-path="url(#tcc)">
+<rect x="222" y="236" width="580" height="132" fill="#D1D9E0"/>
+<rect x="222" y="508" width="580" height="140" fill="#F6F8FA"/>
+<rect x="412" y="236" width="6" height="552" fill="#D1D9E0"/>
+<rect x="606" y="236" width="6" height="552" fill="#D1D9E0"/>
+<rect x="222" y="365" width="580" height="6" fill="#D1D9E0"/>
+<rect x="222" y="505" width="580" height="6" fill="#D1D9E0"/>
+<rect x="222" y="645" width="580" height="6" fill="#D1D9E0"/>
+<rect x="222" y="363" width="580" height="10" fill="#AFB8C1"/>
+<rect x="262" y="284" width="97" height="36" rx="18" fill="#1F2328"/>
+<rect x="455" y="284" width="97" height="36" rx="18" fill="#1F2328"/>
+<rect x="649" y="284" width="97" height="36" rx="18" fill="#1F2328"/>
+<rect x="262" y="424" width="96" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="455" y="424" width="69" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="649" y="424" width="88" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="262" y="564" width="76" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="455" y="564" width="101" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="649" y="564" width="63" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="262" y="704" width="92" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="455" y="704" width="57" height="28" rx="14" fill="#9AA5B1"/>
+<rect x="649" y="704" width="82" height="28" rx="14" fill="#9AA5B1"/>
+</g>
+<rect x="412" y="505" width="199" height="146" rx="10" fill="#FFF1EC" stroke="#FD8C73" stroke-width="16"/>
+<rect x="452" y="564" width="80" height="28" rx="14" fill="#BC4C00"/>
+<rect x="544" y="548" width="10" height="60" rx="5" fill="#1F2328"/>
+<rect x="590" y="629" width="44" height="44" rx="10" fill="#FD8C73" stroke="#fff" stroke-width="8"/>
+</g>
+<use href="#tp" fill="none" stroke="#fff" stroke-opacity="0.18" stroke-width="3"/>
+</g>
+</svg>

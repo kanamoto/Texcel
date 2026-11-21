@@ -1,0 +1,7 @@
+id,note,tail
+00123,"日本語 ABC,xyz",
+12345678901234567890,"He said ""Hello""",last
+2026-11-14,"line 1
+line 2",
+=SUM(A1:A2),literal
+

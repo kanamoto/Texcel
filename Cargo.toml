@@ -1,0 +1,67 @@
+[package]
+name = "texcel"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+build = "build.rs"
+
+[features]
+icon-converter = ["dep:same-file"]
+
+[dependencies]
+arboard = { version = "=3.7.0", default-features = false }
+base64 = "=0.22.1"
+chrono = { version = "=0.4.45", default-features = false, features = ["clock", "std"] }
+csv = "=1.4.0"
+eframe = { version = "=0.37.0", default-features = true }
+image = { version = "=0.25.10", default-features = false, features = ["png"] }
+html5gum = { version = "=0.8.4", features = ["tree-builder"] }
+html5ever = "=0.29.0"
+markup5ever_rcdom = "=0.5.0-unofficial"
+libc = "=0.2.191"
+fluent-templates = { version = "=0.15.1", default-features = false, features = ["macros", "walkdir"] }
+encoding_rs = "=0.8.44"
+ironcalc_base = "=0.9.1"
+pulldown-cmark = "=0.13.0"
+regex = "=1.13.1"
+quick-xml = "=0.41.0"
+rfd = "=0.15.4"
+serde = { version = "=1.0.229", features = ["derive", "rc"] }
+serde_json = "=1.0.145"
+sha2 = "=0.11.1"
+same-file = { version = "=1.0.6", optional = true }
+sys-locale = "=0.3.2"
+umya-spreadsheet = "=3.1.1"
+zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
+
+[[bin]]
+name = "texcel-icon-convert"
+path = "tools/icon_convert.rs"
+required-features = ["icon-converter"]
+
+[[bin]]
+name = "texcel-licenses"
+path = "tools/license_bundle.rs"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "=0.5.3"
+objc2-app-kit = { version = "=0.2.2", default-features = false, features = ["NSApplication", "NSResponder", "NSUserInterfaceItemIdentification"] }
+objc2-foundation = { version = "=0.2.2", default-features = false, features = ["NSObject", "NSString", "NSArray", "NSNotification", "NSOperation", "NSDate", "NSDateFormatter", "NSFormatter", "block2"] }
+block2 = "=0.5.1"
+muda = { version = "=0.21.2", default-features = false }
+winit = { version = "=0.30.13", default-features = false }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+muda = { version = "=0.21.2", default-features = false }
+winit = { version = "=0.30.13", default-features = false }
+raw-window-handle = "=0.6.2"
+windows-sys = { version = "=0.61.2", features = ["Win32_Foundation", "Win32_Globalization", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"] }
+
+[dev-dependencies]
+egui_kittest = { version = "=0.37.0", features = ["eframe", "wgpu"] }
+fluent-syntax = "=0.12.0"
+
+[patch.crates-io]
+ironcalc_base = { path = "vendor/ironcalc_base" }
+umya-spreadsheet = { path = "vendor/umya-spreadsheet" }

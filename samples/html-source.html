@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>.inventory { color: navy; }</style>
+</head>
+<body>
+<p id="before">この文章はテーブル外です。</p>
+<!-- 変更しないコメント。 -->
+<div id="left">
+  <table class="inventory" data-owner="sample">
+    <caption>在庫</caption>
+    <thead><tr><th>品目</th><th>数量</th></tr></thead>
+    <tbody><tr><td><strong>りんご</strong></td><td>12</td></tr></tbody>
+  </table>
+</div>
+<p>二つ目の表の前にある文章です。</p>
+<div id="right">
+  <table data-note="keep">
+    <caption>注記</caption>
+    <tbody><tr><th>リンク</th><td><a href="https://example.test" title="説明">詳細</a></td></tr></tbody>
+  </table>
+</div>
+<script>const marker = "<table fake>";</script>
+<p id="after">この文章も保持します。</p>
+</body>
+</html>

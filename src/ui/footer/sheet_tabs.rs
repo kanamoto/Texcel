@@ -1,0 +1,237 @@
+use super::*;
+
+pub(super) enum SheetBandAction {
+    Select(TableId),
+    Manage(StructureAction, Option<TableId>),
+    ToggleMode(DocumentId, TableId, crate::document::DocumentDisplayMode),
+}
+
+/// Draws the sheet strip with tabs and Add inside the scroller.
+pub(super) fn draw_sheet_band(
+    app: &TexcelApp,
+    ui: &mut egui::Ui,
+    navigation_blocked: bool,
+) -> Option<SheetBandAction> {
+    let document = app.workspace.active_document();
+    let tabs = document.map_or_else(Vec::new, |document| {
+        let mut counts = BTreeMap::<String, usize>::new();
+        document
+            .tables
+            .iter()
+            .map(|table| {
+                let count = counts.entry(table.name.clone()).or_default();
+                *count += 1;
+                let label = if *count == 1 {
+                    table.name.clone()
+                } else {
+                    format!("{} ({})", table.name, *count)
+                };
+                (table.id, label, table.id == document.active_table)
+            })
+            .collect::<Vec<_>>()
+    });
+    let can_manage_tables = document.is_some_and(|document| {
+        matches!(
+            document.source.as_deref(),
+            Some(SourceDocument::Markdown(_) | SourceDocument::Csv(_))
+        )
+    });
+    let management_enabled = can_manage_tables
+        && !navigation_blocked
+        && !document.is_some_and(|document| app.document_bulk_edit_pending(document.id));
+    let display_mode = document.and_then(|document| {
+        let table = document.active_table()?;
+        Some((document.id, table.id, document.display_mode))
+    });
+    let mut action = None;
+    let band_fill = GridThemePalette::from_visuals(ui.visuals()).header_background;
+    egui::Frame::new()
+        .fill(band_fill)
+        .inner_margin(egui::Margin::ZERO)
+        .show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            ui.set_min_height(CHROME_TAB_HEIGHT);
+            ui.spacing_mut().item_spacing.x = 0.0;
+            ui.spacing_mut().interact_size.y = CHROME_TAB_HEIGHT;
+            ui.horizontal(|ui| {
+                let mode_width = display_mode.map_or(0.0, |(_, _, mode)| {
+                    let label = match mode {
+                        crate::document::DocumentDisplayMode::Live => {
+                            context_text(ui.ctx(), "view-live")
+                        }
+                        crate::document::DocumentDisplayMode::Source => {
+                            context_text(ui.ctx(), "view-source")
+                        }
+                    };
+                    chrome::mode_tab_width(ui, &label)
+                });
+                let list_visible = context_text(ui.ctx(), "dialog-table-list-button");
+                let fixed_width = chrome::command_width(ui, &list_visible) + mode_width + 8.0;
+                let scroll_width = (ui.available_width() - fixed_width).max(0.0);
+                egui::ScrollArea::horizontal()
+                    .id_salt("table_tab_scroll")
+                    .auto_shrink([false, false])
+                    .max_width(scroll_width)
+                    .max_height(CHROME_TAB_HEIGHT)
+                    .show(ui, |ui| {
+                        ui.spacing_mut().item_spacing.x = 0.0;
+                        ui.horizontal(|ui| {
+                            for (table_id, name, active) in &tabs {
+                                let response = chrome::sheet_tab_button(ui, *active, name);
+                                if response.clicked() {
+                                    action = Some(SheetBandAction::Select(*table_id));
+                                }
+                                response.context_menu(|menu| {
+                                    visual::prepare_context_menu(menu);
+                                    menu.add_enabled_ui(management_enabled, |menu| {
+                                        if menu
+                                            .button(context_text(menu.ctx(), "dialog-add-table"))
+                                            .clicked()
+                                        {
+                                            action = Some(SheetBandAction::Manage(
+                                                StructureAction::AddTable,
+                                                Some(*table_id),
+                                            ));
+                                            menu.close();
+                                        }
+                                        if menu
+                                            .button(context_text(
+                                                menu.ctx(),
+                                                "dialog-duplicate-table",
+                                            ))
+                                            .clicked()
+                                        {
+                                            action = Some(SheetBandAction::Manage(
+                                                StructureAction::DuplicateTable,
+                                                Some(*table_id),
+                                            ));
+                                            menu.close();
+                                        }
+                                        if menu
+                                            .add_enabled(
+                                                tabs.len() > 1,
+                                                egui::Button::new(context_text(
+                                                    menu.ctx(),
+                                                    "dialog-delete-table",
+                                                )),
+                                            )
+                                            .clicked()
+                                        {
+                                            action = Some(SheetBandAction::Manage(
+                                                StructureAction::DeleteTable,
+                                                Some(*table_id),
+                                            ));
+                                            menu.close();
+                                        }
+                                    });
+                                    if !can_manage_tables {
+                                        menu.label(context_text(
+                                            menu.ctx(),
+                                            "dialog-csv-one-table",
+                                        ));
+                                    }
+                                });
+                            }
+                            let add_label = context_text(ui.ctx(), "dialog-add-table");
+                            if chrome::sheet_band_icon_button(
+                                ui,
+                                &add_label,
+                                chrome::CommandIcon::AddTable,
+                                management_enabled,
+                            )
+                            .clicked()
+                            {
+                                action =
+                                    Some(SheetBandAction::Manage(StructureAction::AddTable, None));
+                            }
+                        });
+                    });
+                let list_label = context_text(ui.ctx(), "dialog-table-list");
+                ui.add_space(8.0);
+                chrome::sheet_table_list_button(ui, &list_visible, &list_label, |menu| {
+                    visual::prepare_context_menu(menu);
+                    let max_height =
+                        (menu.ctx().content_rect().height() - 48.0).clamp(120.0, 360.0);
+                    // Summaries are built only while the list is open.
+                    let empty = text(app.language, "dialog-empty-table");
+                    egui::ScrollArea::vertical()
+                        .id_salt("table_list_choices")
+                        .auto_shrink([true, true])
+                        .max_height(max_height)
+                        .show(menu, |menu| {
+                            let Some(document) = document else {
+                                return;
+                            };
+                            for ((table_id, name, active), table) in
+                                tabs.iter().zip(&document.tables)
+                            {
+                                let summary = table_summary(table).unwrap_or_else(|| empty.clone());
+                                if menu
+                                    .selectable_label(*active, format!("{name} — {summary}"))
+                                    .clicked()
+                                {
+                                    action = Some(SheetBandAction::Select(*table_id));
+                                    menu.close();
+                                }
+                            }
+                        });
+                });
+                if let Some((document_id, table_id, current_mode)) = display_mode {
+                    let (visible_key, action_key, next_mode) = match current_mode {
+                        crate::document::DocumentDisplayMode::Live => (
+                            "view-live",
+                            "view-switch-to-source",
+                            crate::document::DocumentDisplayMode::Source,
+                        ),
+                        crate::document::DocumentDisplayMode::Source => (
+                            "view-source",
+                            "view-switch-to-live",
+                            crate::document::DocumentDisplayMode::Live,
+                        ),
+                    };
+                    let visible = context_text(ui.ctx(), visible_key);
+                    let mode_action = context_text(ui.ctx(), action_key);
+                    let shortcut = ui.ctx().format_shortcut(&egui::KeyboardShortcut::new(
+                        egui::Modifiers::COMMAND,
+                        egui::Key::Slash,
+                    ));
+                    let hint = format!(
+                        "{mode_action} ({shortcut})\n{}",
+                        context_text(ui.ctx(), "view-mode-help")
+                    );
+                    if chrome::mode_tab_button(
+                        ui,
+                        current_mode == crate::document::DocumentDisplayMode::Source,
+                        &visible,
+                        &mode_action,
+                    )
+                    .on_hover_text(hint)
+                    .clicked()
+                    {
+                        action = Some(SheetBandAction::ToggleMode(
+                            document_id,
+                            table_id,
+                            next_mode,
+                        ));
+                    }
+                }
+            });
+        });
+    action
+}
+
+/// Names a table by its value nearest to A1, shortened for the table list.
+pub(super) fn table_summary(table: &crate::document::Table) -> Option<String> {
+    let (_, cell) = table.nearest_filled_cell()?;
+    let text = cell.input.source_text();
+    let compact = text.chars().take(28).collect::<String>();
+    Some(if text.chars().count() > 28 {
+        format!("{compact}…")
+    } else {
+        compact
+    })
+}
+
+#[cfg(test)]
+#[path = "sheet_tabs_test.rs"]
+mod tests;
