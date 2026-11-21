@@ -1,0 +1,17 @@
+# Rust build output, including builds inside vendored crates.
+# Keep Cargo.lock under version control for reproducible application builds.
+target/
+
+# OS metadata.
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+
+# Editor temporary files.
+*.swp
+*.swo
+*~
+
+# Personal Claude permissions; shared settings remain versioned.
+/.claude/settings.local.json
