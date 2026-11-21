@@ -1,0 +1,85 @@
+# Builds the macOS and Windows zips when a semantic-version tag is pushed and attaches them
+# to a GitHub Release for that tag. Each zip holds the app, its licenses folder, and the
+# English and Japanese user manuals.
+name: Package
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Check the tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      # Stops the run unless the tag is a full semantic version equal to Cargo.toml and Info.plist.
+      - id: check
+        run: sh tools/release-version.sh "$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+
+  package:
+    name: Package ${{ matrix.platform }}
+    needs: version
+    # Both zips are built on macOS: the Windows one is cross-built with MinGW-w64,
+    # the same way tools/package-windows.sh is run locally.
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [mac, windows]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update the Rust toolchain
+        run: rustup update stable --no-self-update && rustup default stable
+      - name: Install MinGW-w64
+        if: matrix.platform == 'windows'
+        run: brew install mingw-w64
+      - name: Build the zip
+        run: sh tools/package-zip.sh "${{ matrix.platform }}" "${{ needs.version.outputs.version }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Texcel-${{ matrix.platform }}-${{ needs.version.outputs.version }}
+          path: target/dist/Texcel-${{ matrix.platform }}-${{ needs.version.outputs.version }}.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish the GitHub Release
+    needs: [version, package]
+    runs-on: ubuntu-latest
+    # Only this job may write: it creates the release and attaches the zips.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      # A tag with a pre-release part (such as 1.2.3-rc.1) becomes a pre-release.
+      # Re-running the workflow replaces the zips on an existing release.
+      - name: Create the release and attach the zips
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -eu
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.zip --clobber
+          else
+            prerelease=""
+            case "$VERSION" in
+              *-*) prerelease="--prerelease" ;;
+            esac
+            gh release create "$TAG" dist/*.zip --verify-tag --title "Texcel $VERSION" \
+              --generate-notes $prerelease
+          fi
